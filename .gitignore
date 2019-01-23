@@ -1,5 +1,5 @@
 xtea/
 transcript
-.wlf
-.cr.mti
-.mpf
+*.wlf
+*.cr.mti
+*.mpf
