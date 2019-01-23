@@ -6,15 +6,16 @@ package XTEA_PACK is
 	constant SIZE : integer := 32;
 	-- States definition
 	constant IDLE : integer := 0;
-	constant BUSY_KEY : integer := 1;
-	constant BUSY_ENC_INPUT : integer := 2;
-	constant BUSY_ENC1 : integer := 3;
-	constant BUSY_ENC2 : integer := 4;
-	constant BUSY_ENC_OUTPUT : integer := 5;
-	constant BUSY_DEC_INPUT : integer := 6;
-	constant BUSY_DEC1 : integer := 7;
-	constant BUSY_DEC2 : integer := 8;
-	constant BUSY_DEC_OUTPUT : integer := 9;
+	constant BUSY_KEY1 : integer := 1;
+	constant BUSY_KEY2 : integer := 2;
+	constant BUSY_ENC_INPUT : integer := 3;
+	constant BUSY_ENC1 : integer := 4;
+	constant BUSY_ENC2 : integer := 5;
+	constant BUSY_ENC_OUTPUT : integer := 6;
+	constant BUSY_DEC_INPUT : integer := 7;
+	constant BUSY_DEC1 : integer := 8;
+	constant BUSY_DEC2 : integer := 9;
+	constant BUSY_DEC_OUTPUT : integer := 10;
 end XTEA_PACK;
 
 library IEEE;
@@ -32,8 +33,6 @@ entity XTEA is
 
 		key_input0 : in UNSIGNED (SIZE - 1 downto 0);
 		key_input1 : in UNSIGNED (SIZE - 1 downto 0);
-		key_input2 : in UNSIGNED (SIZE - 1 downto 0);
-		key_input3 : in UNSIGNED (SIZE - 1 downto 0);
 
 		data_output0 : out UNSIGNED (SIZE - 1 downto 0);
 		data_output1 : out UNSIGNED (SIZE - 1 downto 0);
@@ -45,7 +44,7 @@ entity XTEA is
 end XTEA;
 
 architecture BEHAVIORAL of XTEA is
-	subtype STATUS_T is integer range 0 to 9;
+	subtype STATUS_T is integer range 0 to 10;
 	subtype INTERNAL32_T is UNSIGNED (SIZE - 1 downto 0);
 	subtype INTERNAL64_T is UNSIGNED (63 downto 0);
 
@@ -76,11 +75,17 @@ begin
 		case STATUS is
 			when IDLE => 
 				if input_ready = '1' then
-					NEXT_STATUS <= BUSY_KEY;
+					NEXT_STATUS <= BUSY_KEY1;
 				else
 					NEXT_STATUS <= IDLE;
 				end if;
-			when BUSY_KEY => 
+			when BUSY_KEY1 =>
+				if input_ready = '1' then
+					NEXT_STATUS <= BUSY_KEY2;
+				else
+					NEXT_STATUS <= BUSY_KEY1;
+				end if;
+			when BUSY_KEY2 => 
 				if mode = '0' then
 					NEXT_STATUS <= BUSY_ENC_INPUT;
 				else
@@ -146,11 +151,12 @@ begin
 						data_output0 <= ZERO32;
 						data_output1 <= ZERO32;
 						output_ready <= '0';
-					when BUSY_KEY => 
+					when BUSY_KEY1 => 
 						KEY0 <= key_input0;
 						KEY1 <= key_input1;
-						KEY2 <= key_input2;
-						KEY3 <= key_input3;
+					when BUSY_KEY2 => 
+						KEY2 <= key_input0;
+						KEY3 <= key_input1;
 					when BUSY_ENC_INPUT => 
 						TEXT0 <= text_input0;
 						TEXT1 <= text_input1;
